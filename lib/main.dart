@@ -1,6 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart' as path;
 
-void main() {
+Map<int, String> scripts = {
+  1: ''' CREATE TABLE tarefas(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    descricao TEXT,
+    concluido INTEGER
+  );'''
+};
+
+Future iniciarBancoDeDados() async {
+  var db = await openDatabase(
+    path.join(await getDatabasesPath(), 'banco.db'),
+    version: scripts.length,
+    onCreate: (Database db, int index) async{
+      for (var i = 1; i <= scripts.length; i++) {
+        await db.execute(scripts[i]!);
+        print(scripts[i]);
+      }
+    },
+    onUpgrade: (Database db, int velhaVersao, int novaVersao)async{
+      for (var i = velhaVersao + 1; i <= scripts.length; i++) {
+        await db.execute(scripts[i]!);
+        print(scripts[i]);
+      }
+    },
+  );
+  return db;
+}
+
+void main() async{
+  await iniciarBancoDeDados();
   runApp(const MyApp());
 }
 
